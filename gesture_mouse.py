@@ -31,7 +31,7 @@ class GestureMouse:
         self.frame_height = 480
         
         # Smoothing parameters
-        self.smoothing = 7
+        self.smoothing = 5  # Reduced from 7 for more responsive movement
         self.prev_x, self.prev_y = 0, 0
         
         # Click detection
@@ -47,8 +47,8 @@ class GestureMouse:
         self.pinch_start_time = 0
         self.drag_threshold_time = 0.2  # Time to hold pinch before drag starts
         
-        # Movement zone (ignore edges for stability) - INCREASED SIZE
-        self.margin = 50  # Reduced from 100 to increase active zone
+        # Movement zone (ignore edges for stability) - OPTIMIZED FOR SENSITIVITY
+        self.margin = 150  # Increased for higher sensitivity (smaller zone = more cursor movement)
         
         # Visual feedback
         self.pinch_history = deque(maxlen=10)
@@ -328,7 +328,7 @@ class GestureMouse:
                            (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
                 
                 # Instructions at bottom
-                cv2.putText(img, "Green = Index | Blue = Thumb | Yellow = Active Zone (LARGER)", 
+                cv2.putText(img, "Green = Index | Blue = Thumb | Yellow = High Sensitivity Zone", 
                            (10, self.frame_height - 70), cv2.FONT_HERSHEY_SIMPLEX, 
                            0.5, (255, 255, 255), 1)
                 cv2.putText(img, "Quick Pinch = Click | Double Pinch = Double Click", 

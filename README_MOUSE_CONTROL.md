@@ -50,7 +50,7 @@ python gesture_mouse.py
 
 - **Green Circle** = Index fingertip (cursor control)
 - **Blue Circle** = Thumb tip
-- **Yellow Box** = Active tracking zone (LARGER - increased from 100px to 50px margin)
+- **Yellow Box** = High sensitivity zone (optimized for minimal hand movement)
 - **Line between fingers** = Distance indicator
   - Blue line = Not pinching
   - Yellow line = Pinching (clicking)
@@ -62,8 +62,8 @@ python gesture_mouse.py
 In `gesture_mouse.py`:
 
 ```python
-# Smoothing (higher = smoother but slower)
-self.smoothing = 7
+# Smoothing (higher = smoother but slower, lower = more responsive)
+self.smoothing = 5  # Optimized for responsiveness
 
 # Pinch sensitivity (lower = easier to trigger)
 self.pinch_threshold = 40
@@ -77,9 +77,22 @@ self.click_cooldown = 0.3
 # Drag threshold - how long to hold pinch before drag starts
 self.drag_threshold_time = 0.2
 
-# Active zone margin (lower = larger active zone)
-self.margin = 50  # Changed from 100 for BIGGER zone
+# Active zone margin (HIGHER = more sensitivity, less hand movement needed)
+self.margin = 150  # Optimized for high sensitivity
 ```
+
+## Sensitivity Tips
+
+**Current setting is optimized for balanced sensitivity:**
+- Small hand movements = large cursor movements
+- Yellow zone is smaller = higher sensitivity
+- Smoothing reduced for more responsive feel
+
+**To adjust sensitivity:**
+- **More sensitive**: Increase `self.margin` to 200
+- **Less sensitive**: Decrease `self.margin` to 100
+- **Smoother but slower**: Increase `self.smoothing` to 8-10
+- **Faster but jittery**: Decrease `self.smoothing` to 3-4
 
 ## Troubleshooting
 
