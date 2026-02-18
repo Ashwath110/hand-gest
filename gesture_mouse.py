@@ -45,7 +45,7 @@ class GestureMouse:
         # Drag detection
         self.is_dragging = False
         self.pinch_start_time = 0
-        self.drag_threshold_time = 5.0  # Time to hold pinch before drag starts (5 seconds)
+        self.drag_threshold_time = 3.0  # Time to hold pinch before drag starts (3 seconds)
         
         # Movement zone (ignore edges for stability) - OPTIMIZED FOR SENSITIVITY
         self.margin = 150  # Increased for higher sensitivity (smaller zone = more cursor movement)
@@ -187,9 +187,9 @@ class GestureMouse:
         print("="*60)
         print("\nGesture Controls:")
         print("  - Move INDEX FINGER to control cursor")
-        print("  - QUICK PINCH (Index + Thumb) for LEFT CLICK")
+        print("  - PINCH once (Index + Thumb) for LEFT CLICK")
         print("  - DOUBLE PINCH quickly for DOUBLE CLICK") 
-        print("  - HOLD PINCH for 5 SECONDS to DRAG files/objects")
+        print("  - HOLD PINCH for 3 SECONDS to DRAG files/objects")
         print("\nSafety Features:")
         print("  - Press 'Q' to quit safely")
         print("  - Move mouse to TOP-LEFT corner for EMERGENCY STOP")
@@ -256,8 +256,8 @@ class GestureMouse:
                         if self.is_dragging:
                             # End drag if we were dragging
                             self.stop_drag()
-                        elif pinch_duration < self.drag_threshold_time:
-                            # Quick pinch = click (not drag)
+                        else:
+                            # Any pinch release (not during drag) = click
                             self.handle_click()
                         
                         self.is_pinching = False
@@ -296,15 +296,22 @@ class GestureMouse:
                     cv2.putText(img, f"{int(pinch_distance)}px", (mid_x, mid_y),
                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
                     
-                    # Pinch indicator
+                    # Pinch indicator with timer
                     if self.is_dragging:
                         cv2.putText(img, "DRAGGING!", (50, 100),
                                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 0, 255), 3)
                         cv2.circle(img, (50, 150), 20, (255, 0, 255), cv2.FILLED)
                     elif is_pinching:
-                        cv2.putText(img, "PINCHING!", (50, 100),
+                        pinch_duration = current_time - self.pinch_start_time
+                        remaining = max(0, self.drag_threshold_time - pinch_duration)
+                        cv2.putText(img, f"PINCH: {remaining:.1f}s", (50, 100),
                                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 165, 255), 3)
                         cv2.circle(img, (50, 150), 20, (0, 165, 255), cv2.FILLED)
+                        # Progress bar for drag threshold
+                        progress = min(1.0, pinch_duration / self.drag_threshold_time)
+                        bar_width = int(300 * progress)
+                        cv2.rectangle(img, (50, 170), (350, 190), (100, 100, 100), -1)
+                        cv2.rectangle(img, (50, 170), (50 + bar_width, 190), (0, 255, 0), -1)
                 
                 # Draw movement zone with instructions
                 cv2.rectangle(img, (self.margin, self.margin), 
@@ -334,7 +341,7 @@ class GestureMouse:
                 cv2.putText(img, "Quick Pinch = Click | Double Pinch = Double Click", 
                            (10, self.frame_height - 45), cv2.FONT_HERSHEY_SIMPLEX, 
                            0.5, (255, 255, 255), 1)
-                cv2.putText(img, "Hold Pinch = DRAG (5 sec) | Q to Quit", 
+                cv2.putText(img, "Pinch = Click | Hold 3 sec = DRAG | Q to Quit", 
                            (10, self.frame_height - 20), cv2.FONT_HERSHEY_SIMPLEX, 
                            0.5, (255, 255, 255), 1)
                 
