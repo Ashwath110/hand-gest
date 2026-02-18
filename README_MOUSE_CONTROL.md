@@ -42,7 +42,7 @@ python gesture_mouse.py
 | Point with INDEX finger | Move cursor |
 | Quick Pinch (Index + Thumb touch) | Left Click |
 | Double Pinch (2x quickly) | Double Click / Open Application |
-| Hold Pinch (0.2+ seconds) | **DRAG files/objects** |
+| Hold Pinch (5 seconds) | **DRAG files/objects** |
 | Press 'Q' | Quit Program |
 | Mouse to top-left corner | Emergency Stop |
 
@@ -56,6 +56,22 @@ python gesture_mouse.py
   - Yellow line = Pinching (clicking)
 - **Orange "PINCHING!"** = Quick pinch detected (will click)
 - **Purple "DRAGGING!"** = Drag mode active (holding and moving)
+
+## How to Use Drag Feature
+
+**To drag files or objects:**
+
+1. **Point** your index finger at the file/object you want to drag
+2. **Pinch** your index finger and thumb together
+3. **Hold the pinch for 5 full seconds** (you'll see "PINCHING!" message)
+4. After 5 seconds, **"DRAGGING!"** will appear in purple
+5. **Keep holding the pinch** and move your hand to drag the object
+6. **Release the pinch** to drop the file at the new location
+
+**Why 5 seconds?**
+- Prevents accidental dragging during normal clicks
+- Gives you time to position correctly before drag starts
+- Clear distinction between click and drag operations
 
 ## Settings You Can Adjust
 
@@ -75,7 +91,7 @@ self.double_click_time = 0.5
 self.click_cooldown = 0.3
 
 # Drag threshold - how long to hold pinch before drag starts
-self.drag_threshold_time = 0.2
+self.drag_threshold_time = 5.0  # 5 seconds to prevent accidental drags
 
 # Active zone margin (HIGHER = more sensitivity, less hand movement needed)
 self.margin = 150  # Optimized for high sensitivity

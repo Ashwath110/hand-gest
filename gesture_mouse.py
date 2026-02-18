@@ -45,7 +45,7 @@ class GestureMouse:
         # Drag detection
         self.is_dragging = False
         self.pinch_start_time = 0
-        self.drag_threshold_time = 0.2  # Time to hold pinch before drag starts
+        self.drag_threshold_time = 5.0  # Time to hold pinch before drag starts (5 seconds)
         
         # Movement zone (ignore edges for stability) - OPTIMIZED FOR SENSITIVITY
         self.margin = 150  # Increased for higher sensitivity (smaller zone = more cursor movement)
@@ -189,7 +189,7 @@ class GestureMouse:
         print("  - Move INDEX FINGER to control cursor")
         print("  - QUICK PINCH (Index + Thumb) for LEFT CLICK")
         print("  - DOUBLE PINCH quickly for DOUBLE CLICK") 
-        print("  - HOLD PINCH (0.2s+) to DRAG files/objects")
+        print("  - HOLD PINCH for 5 SECONDS to DRAG files/objects")
         print("\nSafety Features:")
         print("  - Press 'Q' to quit safely")
         print("  - Move mouse to TOP-LEFT corner for EMERGENCY STOP")
@@ -334,7 +334,7 @@ class GestureMouse:
                 cv2.putText(img, "Quick Pinch = Click | Double Pinch = Double Click", 
                            (10, self.frame_height - 45), cv2.FONT_HERSHEY_SIMPLEX, 
                            0.5, (255, 255, 255), 1)
-                cv2.putText(img, "Hold Pinch = DRAG | Q to Quit", 
+                cv2.putText(img, "Hold Pinch = DRAG (5 sec) | Q to Quit", 
                            (10, self.frame_height - 20), cv2.FONT_HERSHEY_SIMPLEX, 
                            0.5, (255, 255, 255), 1)
                 
