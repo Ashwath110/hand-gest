@@ -42,8 +42,13 @@ class GestureMouse:
         self.double_click_time = 0.5  # Time window for double click
         self.click_cooldown = 0.3  # Cooldown between clicks
         
-        # Movement zone (ignore edges for stability)
-        self.margin = 100
+        # Drag detection
+        self.is_dragging = False
+        self.pinch_start_time = 0
+        self.drag_threshold_time = 0.2  # Time to hold pinch before drag starts
+        
+        # Movement zone (ignore edges for stability) - INCREASED SIZE
+        self.margin = 50  # Reduced from 100 to increase active zone
         
         # Visual feedback
         self.pinch_history = deque(maxlen=10)
@@ -147,6 +152,24 @@ class GestureMouse:
         
         self.last_pinch_time = current_time
     
+    def start_drag(self):
+        """
+        Start dragging operation
+        """
+        if not self.is_dragging:
+            pyautogui.mouseDown()
+            self.is_dragging = True
+            print("Drag Started!")
+    
+    def stop_drag(self):
+        """
+        Stop dragging operation
+        """
+        if self.is_dragging:
+            pyautogui.mouseUp()
+            self.is_dragging = False
+            print("Drag Ended!")
+    
     def run(self):
         """
         Main loop for gesture mouse control
@@ -164,8 +187,9 @@ class GestureMouse:
         print("="*60)
         print("\nGesture Controls:")
         print("  - Move INDEX FINGER to control cursor")
-        print("  - PINCH (Index + Thumb) for LEFT CLICK")
-        print("  - PINCH TWICE quickly for DOUBLE CLICK")
+        print("  - QUICK PINCH (Index + Thumb) for LEFT CLICK")
+        print("  - DOUBLE PINCH quickly for DOUBLE CLICK") 
+        print("  - HOLD PINCH (0.2s+) to DRAG files/objects")
         print("\nSafety Features:")
         print("  - Press 'Q' to quit safely")
         print("  - Move mouse to TOP-LEFT corner for EMERGENCY STOP")
@@ -210,29 +234,49 @@ class GestureMouse:
                     # Store pinch state
                     self.pinch_history.append(is_pinching)
                     
-                    # Handle pinch detection
+                    # Get current time for drag detection
+                    current_time = time.time()
+                    
+                    # Handle pinch detection with drag support
                     if is_pinching and not self.is_pinching:
-                        # Pinch started
+                        # Pinch just started
                         self.is_pinching = True
-                        self.handle_click()
+                        self.pinch_start_time = current_time
+                    elif is_pinching and self.is_pinching:
+                        # Pinch is being held
+                        pinch_duration = current_time - self.pinch_start_time
+                        
+                        if pinch_duration >= self.drag_threshold_time and not self.is_dragging:
+                            # Start dragging after threshold time
+                            self.start_drag()
                     elif not is_pinching and self.is_pinching:
                         # Pinch ended
+                        pinch_duration = current_time - self.pinch_start_time
+                        
+                        if self.is_dragging:
+                            # End drag if we were dragging
+                            self.stop_drag()
+                        elif pinch_duration < self.drag_threshold_time:
+                            # Quick pinch = click (not drag)
+                            self.handle_click()
+                        
                         self.is_pinching = False
                     
-                    # Move mouse if not pinching (for smooth cursor movement)
-                    if not is_pinching:
-                        # Map coordinates to screen
-                        screen_x, screen_y = self.map_to_screen(index_x, index_y)
-                        
-                        # Smooth movement
-                        smooth_x, smooth_y = self.smooth_coordinates(screen_x, screen_y)
-                        
-                        # Move cursor
-                        try:
-                            pyautogui.moveTo(smooth_x, smooth_y)
-                        except pyautogui.FailSafeException:
-                            print("\n[EMERGENCY STOP] Mouse moved to corner - Exiting safely...")
-                            break
+                    # Move mouse cursor
+                    # Map coordinates to screen
+                    screen_x, screen_y = self.map_to_screen(index_x, index_y)
+                    
+                    # Smooth movement
+                    smooth_x, smooth_y = self.smooth_coordinates(screen_x, screen_y)
+                    
+                    # Move cursor (works for both normal movement and dragging)
+                    try:
+                        pyautogui.moveTo(smooth_x, smooth_y)
+                    except pyautogui.FailSafeException:
+                        print("\n[EMERGENCY STOP] Mouse moved to corner - Exiting safely...")
+                        if self.is_dragging:
+                            self.stop_drag()
+                        break
                     
                     # Visual feedback
                     # Draw thumb tip
@@ -253,10 +297,14 @@ class GestureMouse:
                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
                     
                     # Pinch indicator
-                    if is_pinching:
-                        cv2.putText(img, "CLICKING!", (50, 100),
-                                   cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
-                        cv2.circle(img, (50, 150), 20, (0, 0, 255), cv2.FILLED)
+                    if self.is_dragging:
+                        cv2.putText(img, "DRAGGING!", (50, 100),
+                                   cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 0, 255), 3)
+                        cv2.circle(img, (50, 150), 20, (255, 0, 255), cv2.FILLED)
+                    elif is_pinching:
+                        cv2.putText(img, "PINCHING!", (50, 100),
+                                   cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 165, 255), 3)
+                        cv2.circle(img, (50, 150), 20, (0, 165, 255), cv2.FILLED)
                 
                 # Draw movement zone with instructions
                 cv2.rectangle(img, (self.margin, self.margin), 
@@ -280,10 +328,13 @@ class GestureMouse:
                            (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
                 
                 # Instructions at bottom
-                cv2.putText(img, "Green = Index | Blue = Thumb | Yellow = Active Zone", 
-                           (10, self.frame_height - 50), cv2.FONT_HERSHEY_SIMPLEX, 
+                cv2.putText(img, "Green = Index | Blue = Thumb | Yellow = Active Zone (LARGER)", 
+                           (10, self.frame_height - 70), cv2.FONT_HERSHEY_SIMPLEX, 
                            0.5, (255, 255, 255), 1)
-                cv2.putText(img, "Pinch to Click | Double Pinch to Double Click | Q to Quit", 
+                cv2.putText(img, "Quick Pinch = Click | Double Pinch = Double Click", 
+                           (10, self.frame_height - 45), cv2.FONT_HERSHEY_SIMPLEX, 
+                           0.5, (255, 255, 255), 1)
+                cv2.putText(img, "Hold Pinch = DRAG | Q to Quit", 
                            (10, self.frame_height - 20), cv2.FONT_HERSHEY_SIMPLEX, 
                            0.5, (255, 255, 255), 1)
                 
@@ -302,6 +353,9 @@ class GestureMouse:
             print(f"\n[ERROR] {str(e)}")
             print("Exiting safely...")
         finally:
+            # Ensure drag is stopped if active
+            if self.is_dragging:
+                self.stop_drag()
             cap.release()
             cv2.destroyAllWindows()
             print("\n" + "="*60)

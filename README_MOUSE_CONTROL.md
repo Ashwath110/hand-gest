@@ -40,8 +40,9 @@ python gesture_mouse.py
 | Gesture | Action |
 |---------|--------|
 | Point with INDEX finger | Move cursor |
-| Pinch (Index + Thumb touch) | Left Click |
+| Quick Pinch (Index + Thumb touch) | Left Click |
 | Double Pinch (2x quickly) | Double Click / Open Application |
+| Hold Pinch (0.2+ seconds) | **DRAG files/objects** |
 | Press 'Q' | Quit Program |
 | Mouse to top-left corner | Emergency Stop |
 
@@ -49,11 +50,12 @@ python gesture_mouse.py
 
 - **Green Circle** = Index fingertip (cursor control)
 - **Blue Circle** = Thumb tip
-- **Yellow Box** = Active tracking zone
+- **Yellow Box** = Active tracking zone (LARGER - increased from 100px to 50px margin)
 - **Line between fingers** = Distance indicator
   - Blue line = Not pinching
   - Yellow line = Pinching (clicking)
-- **Red "CLICKING!"** = Click action detected
+- **Orange "PINCHING!"** = Quick pinch detected (will click)
+- **Purple "DRAGGING!"** = Drag mode active (holding and moving)
 
 ## Settings You Can Adjust
 
@@ -71,6 +73,12 @@ self.double_click_time = 0.5
 
 # Click cooldown to prevent accidental multiple clicks
 self.click_cooldown = 0.3
+
+# Drag threshold - how long to hold pinch before drag starts
+self.drag_threshold_time = 0.2
+
+# Active zone margin (lower = larger active zone)
+self.margin = 50  # Changed from 100 for BIGGER zone
 ```
 
 ## Troubleshooting
